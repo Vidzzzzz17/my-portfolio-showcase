@@ -167,10 +167,10 @@ function Index() {
             </div>
             <div className="mt-6 grid gap-6 sm:grid-cols-2">
               <div>
-                <p className="text-4xl font-semibold">{solved.All}<span className="text-base text-muted-foreground">/4082</span></p>
+                <p className="text-4xl font-semibold">{solved["All"]}<span className="text-base text-muted-foreground">/4082</span></p>
                 <p className="text-xs text-muted-foreground">✓ Solved</p>
                 <div className="mt-4 space-y-2 text-sm">
-                  {[["Easy", solved.Easy, 971], ["Med.", solved.Medium, 2128], ["Hard", solved.Hard, 983]].map(([l, a, b]) => (
+                  {[["Easy", solved["Easy"], 971], ["Med.", solved["Medium"], 2128], ["Hard", solved["Hard"], 983]].map(([l, a, b]) => (
                     <div key={l as string}>
                       <div className="flex justify-between"><span>{l}</span><span className="text-muted-foreground">{a}/{b}</span></div>
                       <div className="mt-1 h-1.5 rounded-full bg-secondary"><div className="h-full rounded-full bg-accent" style={{ width: `${((a as number) / (b as number)) * 100 * 4}%` }} /></div>
