@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { getActivity, type Day } from "@/lib/activity.functions";
+
+const activityQuery = queryOptions({ queryKey: ["activity"], queryFn: () => getActivity(), staleTime: 10 * 60_000 });
 import logo from "@/assets/logo.png.asset.json";
 import avatar from "@/assets/avatar.png.asset.json";
 import banner from "@/assets/banner.png.asset.json";
@@ -18,6 +22,7 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(activityQuery),
   component: Index,
 });
 
@@ -62,19 +67,11 @@ const socials: [string, string][] = [
 ];
 
 const heat = ["bg-heat-0", "bg-heat-1", "bg-heat-2", "bg-heat-3", "bg-heat-4"];
-function Heatmap({ seed, density }: { seed: number; density: number }) {
-  const cells = useMemo(() => {
-    let x = seed;
-    return Array.from({ length: 53 * 7 }, () => {
-      x = (x * 9301 + 49297) % 233280;
-      const r = x / 233280;
-      return r > density ? 0 : Math.min(4, 1 + Math.floor((r / density) * 4));
-    });
-  }, [seed, density]);
+function Heatmap({ days }: { days: Day[] }) {
   return (
     <div className="overflow-x-auto">
       <div className="grid grid-flow-col grid-rows-7 gap-[3px] w-max">
-        {cells.map((c, i) => <div key={i} className={`size-[10px] rounded-[2px] ${heat[c]}`} />)}
+        {days.map((d) => <div key={d.date} title={`${d.count} on ${d.date}`} className={`size-[10px] rounded-[2px] ${heat[Math.min(4, d.level)]}`} />)}
       </div>
       <div className="mt-3 flex items-center justify-end gap-1 text-[11px] text-muted-foreground">
         Less {heat.map((h) => <span key={h} className={`size-[10px] rounded-[2px] ${h}`} />)} More
@@ -94,6 +91,10 @@ function Section({ id, title, children }: { id?: string; title: string; children
 
 function Index() {
   const [sent, setSent] = useState(false);
+  const { data } = useSuspenseQuery(activityQuery);
+  const gh = data.github;
+  const lc = data.leetcode;
+  const solved = lc?.solved ?? { All: 177, Easy: 39, Medium: 98, Hard: 40 };
   return (
     <div id="top" className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
@@ -154,22 +155,22 @@ function Index() {
 
         <Section id="activity" title="Activity">
           <div className="mb-3 flex justify-between text-sm">
-            <span>750 contributions in the last year</span>
+            <span>{gh ? `${gh.total.toLocaleString()} contributions in the last year` : "GitHub activity unavailable right now"}</span>
             <a href="https://github.com/Vidzzzzz17" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground">GitHub @Vidzzzzz17 ↗</a>
           </div>
-          <Heatmap seed={17} density={0.55} />
+          {gh && <Heatmap days={gh.days} />}
 
           <div className="mt-10 rounded-xl border border-border bg-card p-6">
             <div className="flex justify-between text-sm">
               <span className="font-medium">LeetCode</span>
-              <a href="https://leetcode.com/u/Vidzzzzz17/" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground">Vidzzzzz17 · Rank 1,000,202 ↗</a>
+              <a href="https://leetcode.com/u/Vidzzzzz17/" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground">Vidzzzzz17{lc ? ` · Rank ${lc.ranking.toLocaleString()}` : ""} ↗</a>
             </div>
             <div className="mt-6 grid gap-6 sm:grid-cols-2">
               <div>
-                <p className="text-4xl font-semibold">177<span className="text-base text-muted-foreground">/4082</span></p>
+                <p className="text-4xl font-semibold">{solved.All}<span className="text-base text-muted-foreground">/4082</span></p>
                 <p className="text-xs text-muted-foreground">✓ Solved</p>
                 <div className="mt-4 space-y-2 text-sm">
-                  {[["Easy", 39, 971], ["Med.", 98, 2128], ["Hard", 40, 983]].map(([l, a, b]) => (
+                  {[["Easy", solved.Easy, 971], ["Med.", solved.Medium, 2128], ["Hard", solved.Hard, 983]].map(([l, a, b]) => (
                     <div key={l as string}>
                       <div className="flex justify-between"><span>{l}</span><span className="text-muted-foreground">{a}/{b}</span></div>
                       <div className="mt-1 h-1.5 rounded-full bg-secondary"><div className="h-full rounded-full bg-accent" style={{ width: `${((a as number) / (b as number)) * 100 * 4}%` }} /></div>
@@ -189,10 +190,10 @@ function Index() {
               </div>
             </div>
             <div className="mt-6 mb-3 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
-              <span>271 submissions in the past one year</span>
-              <span>Total active days: 72 · Max streak: 23</span>
+              <span>{lc ? `${lc.submissions} submissions in the past one year` : "LeetCode activity unavailable right now"}</span>
+              {lc && <span>Total active days: {lc.activeDays} · Max streak: {lc.streak}</span>}
             </div>
-            <Heatmap seed={42} density={0.2} />
+            {lc && <Heatmap days={lc.days} />}
           </div>
         </Section>
 
