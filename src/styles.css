@@ -53,6 +53,11 @@
   --color-chart-5: var(--chart-5);
   --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, monospace;
+  --color-easy: var(--easy);
+  --color-medium: var(--medium);
+  --color-hard: var(--hard);
+  --color-verified: var(--verified);
+  --color-disc: var(--disc);
   --color-heat-0: var(--heat-0);
   --color-heat-1: var(--heat-1);
   --color-heat-2: var(--heat-2);
@@ -89,6 +94,11 @@
   --border: oklch(0.91 0 0);
   --input: oklch(0.91 0 0);
   --ring: oklch(0.7 0 0);
+  --easy: oklch(0.68 0.12 185);
+  --medium: oklch(0.75 0.16 70);
+  --hard: oklch(0.63 0.21 25);
+  --verified: oklch(0.65 0.17 245);
+  --disc: oklch(0.27 0.02 240);
   --heat-0: oklch(0.93 0 0);
   --heat-1: oklch(0.85 0.1 150);
   --heat-2: oklch(0.72 0.15 150);
@@ -158,5 +168,12 @@
   html { scroll-behavior: smooth; }
 }
 
-@utility rail { @apply mx-auto w-full max-w-3xl border-x border-border; }
+@utility rail { @apply mx-auto w-full max-w-[1200px] border-x border-border; }
+@utility hatch {
+  background-image: repeating-linear-gradient(135deg, var(--border) 0 1px, transparent 1px 10px);
+}
+@utility dots {
+  background-image: radial-gradient(color-mix(in oklab, var(--background) 35%, transparent) 1.1px, transparent 1.2px);
+  background-size: 16px 16px;
+}
 @utility label-mono { @apply font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground; }
