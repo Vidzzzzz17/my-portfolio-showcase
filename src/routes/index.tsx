@@ -94,7 +94,7 @@ function Heatmap({ days }: { days: Day[] }) {
   for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7));
   let last = -1;
   const labels = weeks.map((w) => {
-    const m = new Date(w[0].date).getUTCMonth();
+    const m = new Date(w[0]?.date ?? 0).getUTCMonth();
     if (m === last) return "";
     last = m;
     return MONTHS[m];
@@ -194,7 +194,7 @@ function SearchPalette() {
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
   }, []);
-  const items = [["Home", "#top"], ["Projects", "#projects"], ["Activity", "#activity"], ["Writing", "#writing"], ["Contact", "#contact"], ...icons.map(([n, u]) => [n, u])];
+  const items = [["Home", "#top"], ["Projects", "#projects"], ["Activity", "#activity"], ["Writing", "#writing"], ["Contact", "#contact"], ...icons.map(([n, u]) => [n, u] as [string, string])] as [string, string][];
   return (
     <>
       <button onClick={() => setOpen(true)} className="hidden items-center gap-2 rounded-full border border-border px-4 py-1.5 text-muted-foreground transition-colors hover:text-foreground sm:flex">
@@ -225,7 +225,7 @@ function Index() {
   const { data } = useSuspenseQuery(activityQuery);
   const gh = data.github;
   const lc = data.leetcode;
-  const solved = lc?.solved ?? { All: 177, Easy: 39, Medium: 98, Hard: 40 };
+  const solved: Record<string, number> = lc?.solved ?? { All: 177, Easy: 39, Medium: 98, Hard: 40 };
 
   return (
     <div id="top" className="min-h-screen overflow-x-hidden bg-background">
@@ -330,7 +330,7 @@ function Index() {
             </div>
             <div className="grid gap-5 md:grid-cols-2">
               <div className="flex items-center justify-around gap-6 rounded-xl border border-border bg-card p-8">
-                <Ring easy={solved["Easy"]} med={solved["Medium"]} hard={solved["Hard"]} solved={solved["All"]} total={4082} />
+                <Ring easy={(solved["Easy"] ?? 0)} med={(solved["Medium"] ?? 0)} hard={(solved["Hard"] ?? 0)} solved={(solved["All"] ?? 0)} total={4082} />
                 <div className="space-y-2">
                   {[["Easy", solved["Easy"], 971, "text-easy"], ["Med.", solved["Medium"], 2128, "text-medium"], ["Hard", solved["Hard"], 983, "text-hard"]].map(([l, a, b, c]) => (
                     <div key={l as string} className="w-28 rounded-lg bg-secondary py-2 text-center">
@@ -458,7 +458,7 @@ function Index() {
               <div key={title as string}>
                 <p className="mb-4 font-mono uppercase tracking-[0.1em] text-muted-foreground">{title as string}</p>
                 <ul className="space-y-3 text-lg">
-                  {(links as string[][]).map(([n, u]) => (
+                  {(links as [string, string][]).map(([n, u]) => (
                     <li key={n}><a href={u} target={u.startsWith("#") ? undefined : "_blank"} rel="noreferrer" className="hover:underline">{n}</a></li>
                   ))}
                 </ul>
