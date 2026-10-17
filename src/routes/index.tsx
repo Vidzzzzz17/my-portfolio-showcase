@@ -194,7 +194,7 @@ function SearchPalette() {
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
   }, []);
-  const items = [["Home", "#top"], ["Projects", "#projects"], ["Activity", "#activity"], ["Writing", "#writing"], ["Contact", "#contact"], ...icons.map(([n, u]) => [n, u])];
+  const items = [["Home", "#top"], ["Projects", "#projects"], ["Activity", "#activity"], ["Writing", "#writing"], ["Contact", "#contact"], ...icons.map(([n, u]) => [n, u] as [string, string])] as [string, string][];
   return (
     <>
       <button onClick={() => setOpen(true)} className="hidden items-center gap-2 rounded-full border border-border px-4 py-1.5 text-muted-foreground transition-colors hover:text-foreground sm:flex">
