@@ -551,7 +551,7 @@ function MusicPlayer() {
           <button type="button" aria-label="Previous track" onClick={() => play((cur - 1 + tracks.length) % tracks.length)} className="flex size-11 items-center justify-center rounded-full border border-border bg-secondary transition-transform hover:scale-105">
             <SkipBack className="size-4 fill-foreground" />
           </button>
-          <button type="button" aria-label={playing ? "Pause" : "Play"} onClick={() => { console.log("play-click", playing, cur); playing ? stop() : play(cur); }} className="flex size-14 items-center justify-center rounded-full border border-border bg-secondary transition-transform hover:scale-105">
+          <button type="button" aria-label={playing ? "Pause" : "Play"} onClick={() => (playing ? stop() : play(cur))} className="flex size-14 items-center justify-center rounded-full border border-border bg-secondary transition-transform hover:scale-105">
             {playing ? <Pause className="size-5 fill-foreground" /> : <Play className="size-5 fill-foreground" />}
           </button>
           <button type="button" aria-label="Next track" onClick={() => play((cur + 1) % tracks.length)} className="flex size-11 items-center justify-center rounded-full border border-border bg-secondary transition-transform hover:scale-105">
