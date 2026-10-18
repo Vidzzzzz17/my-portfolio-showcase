@@ -37,6 +37,72 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+// ---- On-page playlist (Web Audio synth, no external files) ----
+type Note = [number, number]; // [midi, beats]
+const mf = (m: number) => 440 * Math.pow(2, (m - 69) / 12);
+const tracks: { title: string; artist: string; bpm: number; notes: Note[] }[] = [
+  {
+    title: "La Campanella", artist: "Niccolò Paganini / Franz Liszt", bpm: 132,
+    notes: (() => { const n: Note[] = []; const motif = [[75, 0.5], [74, 0.5], [75, 0.5], [81, 0.5], [80, 0.5], [78, 0.5], [75, 0.5], [74, 0.5]] as Note[]; for (let r = 0; r < 4; r++) n.push(...motif); n.push([69, 1], [73, 1], [76, 1], [81, 1], [80, 0.5], [78, 0.5], [76, 0.5], [74, 0.5], [73, 2]); return n; })(),
+  },
+  {
+    title: "Für Elise", artist: "Ludwig van Beethoven", bpm: 120,
+    notes: [[76, 0.5], [75, 0.5], [76, 0.5], [75, 0.5], [76, 0.5], [71, 0.5], [74, 0.5], [72, 0.5], [69, 1], [60, 0.5], [64, 0.5], [69, 0.5], [71, 1], [64, 0.5], [68, 0.5], [71, 0.5], [72, 1], [64, 0.5], [76, 0.5], [75, 0.5], [76, 0.5], [75, 0.5], [76, 0.5], [71, 0.5], [74, 0.5], [72, 0.5], [69, 2]],
+  },
+  {
+    title: "Moonlight Sonata", artist: "Ludwig van Beethoven", bpm: 60,
+    notes: [[61, 1], [64, 1], [68, 1], [61, 1], [64, 1], [68, 1], [60, 1], [64, 1], [67, 1], [60, 1], [64, 1], [67, 1], [59, 1], [64, 1], [67, 1], [61, 1], [64, 1], [68, 1], [60, 2], [64, 2]],
+  },
+  {
+    title: "Clair de Lune", artist: "Claude Debussy", bpm: 72,
+    notes: [[74, 1], [77, 1], [81, 1], [86, 1.5], [84, 0.5], [81, 1], [77, 1], [74, 1], [72, 1], [74, 1], [77, 1], [81, 1], [79, 1.5], [77, 0.5], [74, 2]],
+  },
+];
+
+function usePlayer() {
+  const [cur, setCur] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [prog, setProg] = useState(0);
+  const ctxRef = useRef<AudioContext | null>(null);
+  const stopRef = useRef<(() => void) | null>(null);
+  const rafRef = useRef(0);
+
+  const stop = () => { stopRef.current?.(); stopRef.current = null; cancelAnimationFrame(rafRef.current); setPlaying(false); setProg(0); };
+
+  const play = (idx: number) => {
+    stop();
+    const t = tracks[idx];
+    const ctx = (ctxRef.current ??= new AudioContext());
+    void ctx.resume();
+    const master = ctx.createGain(); master.gain.value = 0.18; master.connect(ctx.destination);
+    const beat = 60 / t.bpm;
+    const total = t.notes.reduce((a, [, b]) => a + b * beat, 0);
+    let at = ctx.currentTime + 0.05;
+    const oscs: OscillatorNode[] = [];
+    for (const [m, b] of t.notes) {
+      const dur = b * beat;
+      const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = mf(m);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(0.9, at + 0.02); g.gain.exponentialRampToValueAtTime(0.001, at + dur * 0.95);
+      o.connect(g); g.connect(master); o.start(at); o.stop(at + dur); oscs.push(o);
+      at += dur;
+    }
+    const start = ctx.currentTime;
+    stopRef.current = () => oscs.forEach((o) => { try { o.stop(); } catch { /* already stopped */ } });
+    setCur(idx); setPlaying(true);
+    const tick = () => {
+      const p = Math.min(1, (ctx.currentTime - start) / total);
+      setProg(p);
+      if (p >= 1) { const next = (idx + 1) % tracks.length; play(next); return; }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  };
+
+  useEffect(() => () => { stopRef.current?.(); cancelAnimationFrame(rafRef.current); void ctxRef.current?.close(); }, []);
+  return { cur, playing, prog, play, stop };
+}
+
 const projects = [
   { n: "01", t: "Folio — AI agent dashboard", d: "A shared runtime for tools, context, and execution — turning ambitious ideas into repeatable workflows.", tags: ["React", "TypeScript", "Vercel"], y: "2026" },
   { n: "02", t: "Gridline — AI-powered code editor", d: "A focused environment that makes the distance between an idea and a working prototype feel smaller.", tags: ["TypeScript", "React", "AI tooling"], y: "2025" },
