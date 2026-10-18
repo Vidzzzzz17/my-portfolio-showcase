@@ -71,7 +71,7 @@ function usePlayer() {
 
   const play = (idx: number) => {
     stop();
-    const t = tracks[idx];
+    const t = tracks[idx]!;
     const ctx = (ctxRef.current ??= new AudioContext());
     void ctx.resume();
     const master = ctx.createGain(); master.gain.value = 0.18; master.connect(ctx.destination);
@@ -531,7 +531,7 @@ function Index() {
 
 function MusicPlayer() {
   const { cur, playing, prog, play, stop } = usePlayer();
-  const t = tracks[cur];
+  const t = tracks[cur]!;
   return (
     <div className="w-[600px] max-w-full rounded-2xl border border-border bg-card p-5">
       <div className="flex items-center gap-5">
