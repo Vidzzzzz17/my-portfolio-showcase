@@ -79,7 +79,8 @@ function usePlayer() {
     const total = t.notes.reduce((a, [, b]) => a + b * beat, 0);
     let at = ctx.currentTime + 0.05;
     const oscs: OscillatorNode[] = [];
-    for (const [m, b] of t.notes) {
+    for (const note of t.notes) {
+      const m = note[0]!, b = note[1]!;
       const dur = b * beat;
       const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = mf(m);
       const g = ctx.createGain();
