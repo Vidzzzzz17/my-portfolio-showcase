@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { BadgeCheck, Play, Search } from "lucide-react";
+import { BadgeCheck, Pause, Play, Search, SkipBack, SkipForward } from "lucide-react";
 import {
   SiGithub, SiX, SiYoutube, SiThreads, SiInstagram, SiMedium, SiReddit, SiLeetcode, SiDiscord,
 } from "react-icons/si";
@@ -36,6 +36,73 @@ export const Route = createFileRoute("/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(activityQuery),
   component: Index,
 });
+
+// ---- On-page playlist (Web Audio synth, no external files) ----
+type Note = [number, number]; // [midi, beats]
+const mf = (m: number) => 440 * Math.pow(2, (m - 69) / 12);
+const tracks: { title: string; artist: string; bpm: number; notes: Note[] }[] = [
+  {
+    title: "La Campanella", artist: "Niccolò Paganini / Franz Liszt", bpm: 132,
+    notes: (() => { const n: Note[] = []; const motif = [[75, 0.5], [74, 0.5], [75, 0.5], [81, 0.5], [80, 0.5], [78, 0.5], [75, 0.5], [74, 0.5]] as Note[]; for (let r = 0; r < 4; r++) n.push(...motif); n.push([69, 1], [73, 1], [76, 1], [81, 1], [80, 0.5], [78, 0.5], [76, 0.5], [74, 0.5], [73, 2]); return n; })(),
+  },
+  {
+    title: "Für Elise", artist: "Ludwig van Beethoven", bpm: 120,
+    notes: [[76, 0.5], [75, 0.5], [76, 0.5], [75, 0.5], [76, 0.5], [71, 0.5], [74, 0.5], [72, 0.5], [69, 1], [60, 0.5], [64, 0.5], [69, 0.5], [71, 1], [64, 0.5], [68, 0.5], [71, 0.5], [72, 1], [64, 0.5], [76, 0.5], [75, 0.5], [76, 0.5], [75, 0.5], [76, 0.5], [71, 0.5], [74, 0.5], [72, 0.5], [69, 2]],
+  },
+  {
+    title: "Moonlight Sonata", artist: "Ludwig van Beethoven", bpm: 60,
+    notes: [[61, 1], [64, 1], [68, 1], [61, 1], [64, 1], [68, 1], [60, 1], [64, 1], [67, 1], [60, 1], [64, 1], [67, 1], [59, 1], [64, 1], [67, 1], [61, 1], [64, 1], [68, 1], [60, 2], [64, 2]],
+  },
+  {
+    title: "Clair de Lune", artist: "Claude Debussy", bpm: 72,
+    notes: [[74, 1], [77, 1], [81, 1], [86, 1.5], [84, 0.5], [81, 1], [77, 1], [74, 1], [72, 1], [74, 1], [77, 1], [81, 1], [79, 1.5], [77, 0.5], [74, 2]],
+  },
+];
+
+function usePlayer() {
+  const [cur, setCur] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [prog, setProg] = useState(0);
+  const ctxRef = useRef<AudioContext | null>(null);
+  const stopRef = useRef<(() => void) | null>(null);
+  const rafRef = useRef(0);
+
+  const stop = () => { stopRef.current?.(); stopRef.current = null; cancelAnimationFrame(rafRef.current); setPlaying(false); setProg(0); };
+
+  const play = (idx: number) => {
+    stop();
+    const t = tracks[idx]!;
+    const ctx = (ctxRef.current ??= new AudioContext());
+    void ctx.resume();
+    const master = ctx.createGain(); master.gain.value = 0.18; master.connect(ctx.destination);
+    const beat = 60 / t.bpm;
+    const total = t.notes.reduce((a, [, b]) => a + b * beat, 0);
+    let at = ctx.currentTime + 0.05;
+    const oscs: OscillatorNode[] = [];
+    for (const note of t.notes) {
+      const m = note[0]!, b = note[1]!;
+      const dur = b * beat;
+      const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = mf(m);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(0.9, at + 0.02); g.gain.exponentialRampToValueAtTime(0.001, at + dur * 0.95);
+      o.connect(g); g.connect(master); o.start(at); o.stop(at + dur); oscs.push(o);
+      at += dur;
+    }
+    const start = ctx.currentTime;
+    stopRef.current = () => oscs.forEach((o) => { try { o.stop(); } catch { /* already stopped */ } });
+    setCur(idx); setPlaying(true);
+    const tick = () => {
+      const p = Math.min(1, (ctx.currentTime - start) / total);
+      setProg(p);
+      if (p >= 1) { const next = (idx + 1) % tracks.length; play(next); return; }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  };
+
+  useEffect(() => () => { stopRef.current?.(); cancelAnimationFrame(rafRef.current); void ctxRef.current?.close(); }, []);
+  return { cur, playing, prog, play, stop };
+}
 
 const projects = [
   { n: "01", t: "Folio — AI agent dashboard", d: "A shared runtime for tools, context, and execution — turning ambitious ideas into repeatable workflows.", tags: ["React", "TypeScript", "Vercel"], y: "2026" },
@@ -276,19 +343,7 @@ function Index() {
           <p className="px-8 pb-8 font-mono text-xs tracking-[0.14em] text-muted-foreground">01 / MAKE IT USEFUL · 02 / SWEAT THE DETAILS · 03 / STAY CURIOUS</p>
           <div className="flex justify-center px-8 pb-10">
             <div>
-              <div className="flex w-[600px] max-w-full items-center gap-5 rounded-2xl border border-border bg-card p-5">
-                <div className="group flex size-24 shrink-0 items-center justify-center rounded-full bg-disc">
-                  <span className="size-4 rounded-full bg-background" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-mono text-sm text-muted-foreground">● Nothing playing</p>
-                  <p className="mt-1 text-xl font-medium">La Campanella (1826)</p>
-                  <p className="text-muted-foreground">Niccolò Paganini</p>
-                </div>
-                <Ext href="https://www.youtube.com/results?search_query=La+Campanella+Paganini" className="flex size-14 items-center justify-center rounded-full border border-border bg-secondary transition-transform hover:scale-105">
-                  <Play className="size-5 fill-foreground" />
-                </Ext>
-              </div>
+              <MusicPlayer />
               <p className="mt-2 font-mono text-xs tracking-[0.1em] text-muted-foreground">THE MUSIC I KEEP COMING BACK TO</p>
             </div>
           </div>
@@ -471,6 +526,50 @@ function Index() {
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function MusicPlayer() {
+  const { cur, playing, prog, play, stop } = usePlayer();
+  const t = tracks[cur]!;
+  return (
+    <div className="w-[600px] max-w-full rounded-2xl border border-border bg-card p-5">
+      <div className="flex items-center gap-5">
+        <div className={`flex size-24 shrink-0 items-center justify-center rounded-full bg-disc ${playing ? "animate-spin [animation-duration:4s]" : ""}`}>
+          <span className="size-4 rounded-full bg-background" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-mono text-sm text-muted-foreground">{playing ? "● Now playing" : "● Paused"}</p>
+          <p className="mt-1 truncate text-xl font-medium">{t.title}</p>
+          <p className="truncate text-muted-foreground">{t.artist}</p>
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-secondary">
+            <div className="h-full bg-foreground transition-[width] duration-200" style={{ width: `${prog * 100}%` }} />
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button type="button" aria-label="Previous track" onClick={() => play((cur - 1 + tracks.length) % tracks.length)} className="flex size-11 items-center justify-center rounded-full border border-border bg-secondary transition-transform hover:scale-105">
+            <SkipBack className="size-4 fill-foreground" />
+          </button>
+          <button type="button" aria-label={playing ? "Pause" : "Play"} onClick={() => (playing ? stop() : play(cur))} className="flex size-14 items-center justify-center rounded-full border border-border bg-secondary transition-transform hover:scale-105">
+            {playing ? <Pause className="size-5 fill-foreground" /> : <Play className="size-5 fill-foreground" />}
+          </button>
+          <button type="button" aria-label="Next track" onClick={() => play((cur + 1) % tracks.length)} className="flex size-11 items-center justify-center rounded-full border border-border bg-secondary transition-transform hover:scale-105">
+            <SkipForward className="size-4 fill-foreground" />
+          </button>
+        </div>
+      </div>
+      <ul className="mt-5 divide-y divide-border border-t border-border">
+        {tracks.map((tr, i) => (
+          <li key={tr.title}>
+            <button type="button" onClick={() => (i === cur && playing ? stop() : play(i))} className={`flex w-full items-center gap-4 py-3 text-left transition-colors hover:bg-secondary/50 ${i === cur ? "text-foreground" : "text-muted-foreground"}`}>
+              <span className="w-8 text-center font-mono text-sm">{i === cur && playing ? "▶" : String(i + 1).padStart(2, "0")}</span>
+              <span className="flex-1 text-lg">{tr.title}</span>
+              <span className="font-mono text-sm">{tr.artist}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
