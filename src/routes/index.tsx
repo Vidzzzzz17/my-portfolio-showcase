@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { BadgeCheck, Play, Search } from "lucide-react";
+import { BadgeCheck, Pause, Play, Search, SkipBack, SkipForward } from "lucide-react";
 import {
   SiGithub, SiX, SiYoutube, SiThreads, SiInstagram, SiMedium, SiReddit, SiLeetcode, SiDiscord,
 } from "react-icons/si";
