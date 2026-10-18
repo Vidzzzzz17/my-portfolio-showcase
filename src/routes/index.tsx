@@ -528,3 +528,47 @@ function Index() {
     </div>
   );
 }
+
+function MusicPlayer() {
+  const { cur, playing, prog, play, stop } = usePlayer();
+  const t = tracks[cur];
+  return (
+    <div className="w-[600px] max-w-full rounded-2xl border border-border bg-card p-5">
+      <div className="flex items-center gap-5">
+        <div className={`flex size-24 shrink-0 items-center justify-center rounded-full bg-disc ${playing ? "animate-spin [animation-duration:4s]" : ""}`}>
+          <span className="size-4 rounded-full bg-background" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-mono text-sm text-muted-foreground">{playing ? "● Now playing" : "● Paused"}</p>
+          <p className="mt-1 truncate text-xl font-medium">{t.title}</p>
+          <p className="truncate text-muted-foreground">{t.artist}</p>
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-secondary">
+            <div className="h-full bg-foreground transition-[width] duration-200" style={{ width: `${prog * 100}%` }} />
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button type="button" aria-label="Previous track" onClick={() => play((cur - 1 + tracks.length) % tracks.length)} className="flex size-11 items-center justify-center rounded-full border border-border bg-secondary transition-transform hover:scale-105">
+            <SkipBack className="size-4 fill-foreground" />
+          </button>
+          <button type="button" aria-label={playing ? "Pause" : "Play"} onClick={() => (playing ? stop() : play(cur))} className="flex size-14 items-center justify-center rounded-full border border-border bg-secondary transition-transform hover:scale-105">
+            {playing ? <Pause className="size-5 fill-foreground" /> : <Play className="size-5 fill-foreground" />}
+          </button>
+          <button type="button" aria-label="Next track" onClick={() => play((cur + 1) % tracks.length)} className="flex size-11 items-center justify-center rounded-full border border-border bg-secondary transition-transform hover:scale-105">
+            <SkipForward className="size-4 fill-foreground" />
+          </button>
+        </div>
+      </div>
+      <ul className="mt-5 divide-y divide-border border-t border-border">
+        {tracks.map((tr, i) => (
+          <li key={tr.title}>
+            <button type="button" onClick={() => (i === cur && playing ? stop() : play(i))} className={`flex w-full items-center gap-4 py-3 text-left transition-colors hover:bg-secondary/50 ${i === cur ? "text-foreground" : "text-muted-foreground"}`}>
+              <span className="w-8 text-center font-mono text-sm">{i === cur && playing ? "▶" : String(i + 1).padStart(2, "0")}</span>
+              <span className="flex-1 text-lg">{tr.title}</span>
+              <span className="font-mono text-sm">{tr.artist}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
