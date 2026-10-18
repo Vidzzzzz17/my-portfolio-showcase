@@ -342,19 +342,7 @@ function Index() {
           <p className="px-8 pb-8 font-mono text-xs tracking-[0.14em] text-muted-foreground">01 / MAKE IT USEFUL · 02 / SWEAT THE DETAILS · 03 / STAY CURIOUS</p>
           <div className="flex justify-center px-8 pb-10">
             <div>
-              <div className="flex w-[600px] max-w-full items-center gap-5 rounded-2xl border border-border bg-card p-5">
-                <div className="group flex size-24 shrink-0 items-center justify-center rounded-full bg-disc">
-                  <span className="size-4 rounded-full bg-background" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-mono text-sm text-muted-foreground">● Nothing playing</p>
-                  <p className="mt-1 text-xl font-medium">La Campanella (1826)</p>
-                  <p className="text-muted-foreground">Niccolò Paganini</p>
-                </div>
-                <Ext href="https://www.youtube.com/results?search_query=La+Campanella+Paganini" className="flex size-14 items-center justify-center rounded-full border border-border bg-secondary transition-transform hover:scale-105">
-                  <Play className="size-5 fill-foreground" />
-                </Ext>
-              </div>
+              <MusicPlayer />
               <p className="mt-2 font-mono text-xs tracking-[0.1em] text-muted-foreground">THE MUSIC I KEEP COMING BACK TO</p>
             </div>
           </div>
