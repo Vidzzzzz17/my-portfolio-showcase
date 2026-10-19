@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { BadgeCheck, Pause, Play, Search, SkipBack, SkipForward } from "lucide-react";
+import { BadgeCheck, Search } from "lucide-react";
 import {
   SiGithub, SiX, SiYoutube, SiThreads, SiInstagram, SiMedium, SiReddit, SiLeetcode, SiDiscord,
 } from "react-icons/si";
 import { FaLinkedinIn } from "react-icons/fa6";
 import { MdOutlineMail } from "react-icons/md";
 import type { IconType } from "react-icons";
+import { TextRoll } from "@/components/text-roll";
+import { TechLogo } from "@/components/tech-logo";
 import { getActivity, type Day } from "@/lib/activity.functions";
 import logo from "@/assets/logo.png.asset.json";
 import avatar from "@/assets/avatar.png.asset.json";
@@ -20,6 +22,7 @@ const activityQuery = queryOptions({
   queryKey: ["activity"],
   queryFn: () => getActivity(),
   staleTime: 10 * 60_000,
+  refetchInterval: 10 * 60_000,
 });
 
 export const Route = createFileRoute("/")({
@@ -37,94 +40,17 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-// ---- On-page playlist (Web Audio synth, no external files) ----
-type Note = [number, number]; // [midi, beats]
-const mf = (m: number) => 440 * Math.pow(2, (m - 69) / 12);
-const tracks: { title: string; artist: string; bpm: number; notes: Note[] }[] = [
-  {
-    title: "La Campanella", artist: "Niccolò Paganini / Franz Liszt", bpm: 132,
-    notes: (() => { const n: Note[] = []; const motif = [[75, 0.5], [74, 0.5], [75, 0.5], [81, 0.5], [80, 0.5], [78, 0.5], [75, 0.5], [74, 0.5]] as Note[]; for (let r = 0; r < 4; r++) n.push(...motif); n.push([69, 1], [73, 1], [76, 1], [81, 1], [80, 0.5], [78, 0.5], [76, 0.5], [74, 0.5], [73, 2]); return n; })(),
-  },
-  {
-    title: "Für Elise", artist: "Ludwig van Beethoven", bpm: 120,
-    notes: [[76, 0.5], [75, 0.5], [76, 0.5], [75, 0.5], [76, 0.5], [71, 0.5], [74, 0.5], [72, 0.5], [69, 1], [60, 0.5], [64, 0.5], [69, 0.5], [71, 1], [64, 0.5], [68, 0.5], [71, 0.5], [72, 1], [64, 0.5], [76, 0.5], [75, 0.5], [76, 0.5], [75, 0.5], [76, 0.5], [71, 0.5], [74, 0.5], [72, 0.5], [69, 2]],
-  },
-  {
-    title: "Moonlight Sonata", artist: "Ludwig van Beethoven", bpm: 60,
-    notes: [[61, 1], [64, 1], [68, 1], [61, 1], [64, 1], [68, 1], [60, 1], [64, 1], [67, 1], [60, 1], [64, 1], [67, 1], [59, 1], [64, 1], [67, 1], [61, 1], [64, 1], [68, 1], [60, 2], [64, 2]],
-  },
-  {
-    title: "Clair de Lune", artist: "Claude Debussy", bpm: 72,
-    notes: [[74, 1], [77, 1], [81, 1], [86, 1.5], [84, 0.5], [81, 1], [77, 1], [74, 1], [72, 1], [74, 1], [77, 1], [81, 1], [79, 1.5], [77, 0.5], [74, 2]],
-  },
-];
-
-function usePlayer() {
-  const [cur, setCur] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  const [prog, setProg] = useState(0);
-  const ctxRef = useRef<AudioContext | null>(null);
-  const stopRef = useRef<(() => void) | null>(null);
-  const rafRef = useRef(0);
-
-  const stop = () => { stopRef.current?.(); stopRef.current = null; cancelAnimationFrame(rafRef.current); setPlaying(false); setProg(0); };
-
-  const play = (idx: number) => {
-    stop();
-    const t = tracks[idx]!;
-    const ctx = (ctxRef.current ??= new AudioContext());
-    void ctx.resume();
-    const master = ctx.createGain(); master.gain.value = 0.18; master.connect(ctx.destination);
-    const beat = 60 / t.bpm;
-    const total = t.notes.reduce((a, [, b]) => a + b * beat, 0);
-    let at = ctx.currentTime + 0.05;
-    const oscs: OscillatorNode[] = [];
-    for (const note of t.notes) {
-      const m = note[0]!, b = note[1]!;
-      const dur = b * beat;
-      const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = mf(m);
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(0.9, at + 0.02); g.gain.exponentialRampToValueAtTime(0.001, at + dur * 0.95);
-      o.connect(g); g.connect(master); o.start(at); o.stop(at + dur); oscs.push(o);
-      at += dur;
-    }
-    const start = ctx.currentTime;
-    stopRef.current = () => oscs.forEach((o) => { try { o.stop(); } catch { /* already stopped */ } });
-    setCur(idx); setPlaying(true);
-    const tick = () => {
-      const p = Math.min(1, (ctx.currentTime - start) / total);
-      setProg(p);
-      if (p >= 1) { const next = (idx + 1) % tracks.length; play(next); return; }
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-  };
-
-  useEffect(() => () => { stopRef.current?.(); cancelAnimationFrame(rafRef.current); void ctxRef.current?.close(); }, []);
-  return { cur, playing, prog, play, stop };
-}
-
 const projects = [
   { n: "01", t: "Folio — AI agent dashboard", d: "A shared runtime for tools, context, and execution — turning ambitious ideas into repeatable workflows.", tags: ["React", "TypeScript", "Vercel"], y: "2026" },
   { n: "02", t: "Gridline — AI-powered code editor", d: "A focused environment that makes the distance between an idea and a working prototype feel smaller.", tags: ["TypeScript", "React", "AI tooling"], y: "2025" },
   { n: "03", t: "Kernel — LLM-based chatbot", d: "A conversational layer for powerful tools, designed to feel direct, useful, and human.", tags: ["LLMs", "Shared runtime"], y: "2024" },
 ];
-const writing = [
-  ["ESSAY", "Building Substrate: one runtime, three products", "8 min · 2026"],
-  ["PROCESS", "Designing Kernel’s mark", "5 min · 2026"],
-  ["NOTES", "What a year on Folio taught me about scope", "7 min · 2025"],
-  ["BUILD LOG", "A generative art experiment in Canvas", "6 min · 2025"],
-  ["BUILD LOG", "Small tool, real use: building an attendance streak tracker", "4 min · 2025"],
-  ["NOTES", "Dynamic programming patterns I keep coming back to", "9 min · 2025"],
-];
-// [name, short mark, brand background, mark color]
-type Tech = [string, string, string, string?];
-const stack: [string, Tech[]][] = [
-  ["01 Languages", [["TypeScript", "TS", "#3178c6"], ["JavaScript", "JS", "#f7df1e", "#111"], ["Python", "Py", "#3776ab", "#ffd43b"], ["C++", "C+", "#00599c"], ["SQL", "SQL", "#475569"]]],
-  ["02 Frontend", [["React", "Re", "#20232a", "#61dafb"], ["Next.js", "N", "#111111"], ["Tailwind CSS", "Tw", "#06b6d4"], ["shadcn/ui", "sh", "#111111"], ["Radix UI", "Rx", "#161618"], ["Motion", "Mo", "#ff0055"], ["Expo", "Ex", "#111111"], ["TanStack", "Ta", "#f59e0b", "#111"]]],
-  ["03 Backend & Database", [["Node.js", "No", "#3c873a"], ["Bun", "Bu", "#fbf0df", "#111"], ["PostgreSQL", "Pg", "#336791"], ["MongoDB", "Mg", "#47a248"], ["Redis", "Rd", "#dc382d"], ["FastAPI", "FA", "#009688"], ["Flask", "Fl", "#111111"], ["Prisma", "Pr", "#0c344b"], ["Drizzle ORM", "Dz", "#c5f74f", "#111"], ["Supabase", "Sb", "#3ecf8e"], ["Docker", "Dk", "#2496ed"], ["Kubernetes", "K8", "#326ce5"], ["AWS", "AW", "#ff9900", "#232f3e"]]],
-  ["04 Workflow & AI", [["Claude", "Cl", "#d97757"], ["Cursor", "Cu", "#111111"], ["LangChain", "LC", "#1c3c3c"], ["LangGraph", "LG", "#1c3c3c"], ["RAG", "RAG", "#7c3aed"], ["Pinecone", "Pc", "#111111"], ["Hugging Face", "HF", "#ffd21e", "#111"], ["Groq", "Gq", "#f55036"], ["n8n", "n8", "#ea4b71"]]],
-  ["05 Analytics  ·  06 Design", [["OpenPanel", "Op", "#111111"], ["PostHog", "PH", "#f9bd2b", "#111"], ["Figma", "Fg", "#a259ff"], ["Paper", "Pa", "#111111"], ["Photoshop", "Ps", "#001e36", "#31a8ff"]]],
+const stack: [string, string[]][] = [
+  ["01 Languages", ["TypeScript", "JavaScript", "Python", "C++", "SQL"]],
+  ["02 Frontend", ["React", "Next.js", "Tailwind CSS", "shadcn/ui", "Radix UI", "Motion", "Expo", "TanStack"]],
+  ["03 Backend & Database", ["Node.js", "Bun", "PostgreSQL", "MongoDB", "Redis", "FastAPI", "Flask", "Prisma", "Drizzle ORM", "Supabase", "Docker", "Kubernetes", "AWS"]],
+  ["04 Workflow & AI", ["Claude", "Cursor", "LangChain", "LangGraph", "RAG", "Pinecone", "Hugging Face", "Groq", "n8n"]],
+  ["05 Analytics · 06 Design", ["OpenPanel", "PostHog", "Figma", "Paper", "Photoshop"]],
 ];
 const certs = [
   ["AI Fluency: Framework & Foundations", "Anthropic"],
@@ -276,7 +202,7 @@ function SearchPalette() {
             <ul className="max-h-80 overflow-y-auto p-2">
               {items.map(([n, u]) => (
                 <li key={n}>
-                  <a href={u} target={u.startsWith("#") ? undefined : "_blank"} rel="noreferrer" onClick={() => setOpen(false)} className="block rounded-md px-3 py-2 text-sm hover:bg-secondary">{n}</a>
+                  <a href={u} target={u.startsWith("#") ? undefined : "_blank"} rel="noreferrer" onClick={() => setOpen(false)} className="block rounded-md px-3 py-2 text-sm hover:bg-secondary"><TextRoll>{n ?? ""}</TextRoll></a>
                 </li>
               ))}
             </ul>
@@ -342,7 +268,7 @@ function Index() {
           </ul>
           <p className="px-8 pb-8 font-mono text-xs tracking-[0.14em] text-muted-foreground">01 / MAKE IT USEFUL · 02 / SWEAT THE DETAILS · 03 / STAY CURIOUS</p>
           <div className="flex justify-center px-8 pb-10">
-            <div>
+            <div className="w-full max-w-[600px]">
               <MusicPlayer />
               <p className="mt-2 font-mono text-xs tracking-[0.1em] text-muted-foreground">THE MUSIC I KEEP COMING BACK TO</p>
             </div>
@@ -420,17 +346,11 @@ function Index() {
 
       <Section id="writing" title="Writing">
         <p className="px-8 pt-8 pb-4 text-lg text-muted-foreground">Notes from building products, learning the craft, and following ideas a little further.</p>
-        <div className="divide-y divide-border">
-          {writing.map(([k, t, m]) => (
-            <div key={t} className="flex flex-col gap-1 px-8 py-6 sm:flex-row sm:items-center sm:gap-6">
-              <span className="w-28 shrink-0 font-mono text-muted-foreground">{k}</span>
-              <span className="flex-1 text-xl font-medium">{t}</span>
-              <span className="font-mono text-muted-foreground">{m}</span>
-            </div>
-          ))}
-        </div>
-        <div className="border-t border-border px-8 py-6">
-          <Ext href={S.medium} className="font-mono text-muted-foreground hover:text-foreground">Explore all writing ↗</Ext>
+        <div className="px-8 pb-8">
+          <Ext href={S.medium} className="group flex items-center justify-between gap-4 border-y border-border py-6 transition-colors hover:text-accent">
+            <span className="flex items-center gap-4"><SiMedium className="size-8" /><span className="text-xl font-medium"><TextRoll>Writing on Medium</TextRoll></span></span>
+            <span className="font-mono">@vidit1727 ↗</span>
+          </Ext>
         </div>
       </Section>
 
@@ -440,9 +360,9 @@ function Index() {
             <div key={g}>
               <p className="mb-3 font-mono uppercase text-muted-foreground">{g}</p>
               <div className="flex flex-wrap gap-2">
-                {items.map(([name, mark, bg, fg]) => (
+                {items.map((name) => (
                   <span key={name} className="flex items-center gap-2 rounded-md border border-border bg-card px-1.5 py-1 pr-3 font-mono">
-                    <span className="flex size-[22px] items-center justify-center rounded text-[9px] font-bold" style={{ background: bg, color: fg ?? "#fff" }}>{mark}</span>
+                    <TechLogo name={name} />
                     {name}
                   </span>
                 ))}
@@ -453,13 +373,20 @@ function Index() {
       </Section>
 
       <Section title="Certificates">
-        <div className="divide-y divide-border">
-          {certs.map(([t, o]) => (
-            <div key={t} className="flex flex-wrap justify-between gap-2 px-8 py-6">
-              <span className="text-xl">{t}</span>
-              <span className="font-mono text-muted-foreground">{o} ↗</span>
-            </div>
-          ))}
+        <div className="certificate-marquee overflow-hidden py-8" tabIndex={0} aria-label="Certificates">
+          <div className="certificate-track flex w-max">
+            {[0, 1].map((copy) => (
+              <div key={copy} className="flex shrink-0 gap-5 pr-5" aria-hidden={copy === 1 ? true : undefined}>
+                {certs.map(([title, issuer]) => (
+                  <article key={title} className="flex w-[300px] shrink-0 flex-col justify-between gap-8 rounded-lg border border-border bg-card p-6">
+                    <BadgeCheck className="size-8 text-verified" />
+                    <h3 className="text-xl font-medium">{title}</h3>
+                    <p className="font-mono text-sm text-muted-foreground">{issuer}</p>
+                  </article>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       </Section>
 
@@ -521,7 +448,7 @@ function Index() {
             ))}
           </div>
           <div className="flex justify-between border-t border-border px-8 py-10 font-mono text-muted-foreground">
-            <span>© 2026 Vidit Sharma · Crafted by Vidit Sharma</span>
+            <span>© 2026 Vidit Sharma · Crafted by Vidit Sharma<br /><Ext href="https://skiper-ui.com/v1/skiper58" className="text-xs hover:text-foreground">Text motion by Skiper UI ↗</Ext></span>
             <a href="#top" className="hover:text-foreground">Back to top ↑</a>
           </div>
         </div>
@@ -531,45 +458,16 @@ function Index() {
 }
 
 function MusicPlayer() {
-  const { cur, playing, prog, play, stop } = usePlayer();
-  const t = tracks[cur]!;
   return (
-    <div className="w-[600px] max-w-full rounded-2xl border border-border bg-card p-5">
-      <div className="flex items-center gap-5">
-        <div className={`flex size-24 shrink-0 items-center justify-center rounded-full bg-disc ${playing ? "animate-spin [animation-duration:4s]" : ""}`}>
-          <span className="size-4 rounded-full bg-background" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="font-mono text-sm text-muted-foreground">{playing ? "● Now playing" : "● Paused"}</p>
-          <p className="mt-1 truncate text-xl font-medium">{t.title}</p>
-          <p className="truncate text-muted-foreground">{t.artist}</p>
-          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-secondary">
-            <div className="h-full bg-foreground transition-[width] duration-200" style={{ width: `${prog * 100}%` }} />
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button type="button" aria-label="Previous track" onClick={() => play((cur - 1 + tracks.length) % tracks.length)} className="flex size-11 items-center justify-center rounded-full border border-border bg-secondary transition-transform hover:scale-105">
-            <SkipBack className="size-4 fill-foreground" />
-          </button>
-          <button type="button" aria-label={playing ? "Pause" : "Play"} onClick={() => (playing ? stop() : play(cur))} className="flex size-14 items-center justify-center rounded-full border border-border bg-secondary transition-transform hover:scale-105">
-            {playing ? <Pause className="size-5 fill-foreground" /> : <Play className="size-5 fill-foreground" />}
-          </button>
-          <button type="button" aria-label="Next track" onClick={() => play((cur + 1) % tracks.length)} className="flex size-11 items-center justify-center rounded-full border border-border bg-secondary transition-transform hover:scale-105">
-            <SkipForward className="size-4 fill-foreground" />
-          </button>
-        </div>
-      </div>
-      <ul className="mt-5 divide-y divide-border border-t border-border">
-        {tracks.map((tr, i) => (
-          <li key={tr.title}>
-            <button type="button" onClick={() => (i === cur && playing ? stop() : play(i))} className={`flex w-full items-center gap-4 py-3 text-left transition-colors hover:bg-secondary/50 ${i === cur ? "text-foreground" : "text-muted-foreground"}`}>
-              <span className="w-8 text-center font-mono text-sm">{i === cur && playing ? "▶" : String(i + 1).padStart(2, "0")}</span>
-              <span className="flex-1 text-lg">{tr.title}</span>
-              <span className="font-mono text-sm">{tr.artist}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <iframe
+      title="Vidit Sharma’s Spotify playlist"
+      src="https://open.spotify.com/embed/playlist/6tq0RyOMHa4GWQd1rDpn4p?utm_source=generator"
+      width="100%"
+      height="352"
+      className="block w-full rounded-lg border-0"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      allowFullScreen
+      loading="lazy"
+    />
   );
 }
