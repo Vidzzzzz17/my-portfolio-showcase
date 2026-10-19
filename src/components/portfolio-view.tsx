@@ -36,7 +36,7 @@ const stack: [string, string[]][] = [
   ["01 Languages", ["TypeScript", "JavaScript", "Python", "C++", "SQL"]],
   ["02 Frontend", ["React", "Next.js", "Tailwind CSS", "shadcn/ui", "Radix UI", "Motion", "Expo", "TanStack"]],
   ["03 Backend & Database", ["Node.js", "Bun", "PostgreSQL", "MongoDB", "Redis", "FastAPI", "Flask", "Prisma", "Drizzle ORM", "Supabase", "Docker", "Kubernetes", "AWS"]],
-  ["04 Workflow & AI", ["Claude", "Cursor", "LangChain", "LangGraph", "RAG", "Pinecone", "Hugging Face", "Groq", "n8n"]],
+  ["04 Workflow & AI", ["ChatGPT", "Codex", "Claude", "Cursor", "LangChain", "LangGraph", "RAG", "Pinecone", "Hugging Face", "Groq", "n8n"]],
   ["05 Analytics · 06 Design", ["OpenPanel", "PostHog", "Figma", "Paper", "Photoshop"]],
 ];
 const certs = [
