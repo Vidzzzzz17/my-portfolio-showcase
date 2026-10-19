@@ -30,7 +30,11 @@ async function github() {
 async function leetcode() {
   const r = await fetch("https://leetcode.com/graphql", {
     method: "POST",
-    headers: { "Content-Type": "application/json", Referer: "https://leetcode.com" },
+    headers: {
+      "Content-Type": "application/json",
+      Referer: "https://leetcode.com",
+      "User-Agent": "Mozilla/5.0 (compatible; ViditPortfolio/1.0)",
+    },
     body: JSON.stringify({
       query: `{allQuestionsCount{difficulty count} matchedUser(username:"${USER}"){profile{ranking} submitStatsGlobal{acSubmissionNum{difficulty count}} userCalendar{totalActiveDays streak submissionCalendar}}}`,
     }),
