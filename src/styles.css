@@ -177,3 +177,16 @@
   background-size: 16px 16px;
 }
 @utility label-mono { @apply font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground; }
+
+@keyframes certificates-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.certificate-track { animation: certificates-scroll 38s linear infinite; }
+.certificate-marquee:hover .certificate-track,
+.certificate-marquee:focus-within .certificate-track { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .certificate-track { animation: none; }
+  .certificate-marquee { overflow-x: auto; }
+  html { scroll-behavior: auto; }
+}
