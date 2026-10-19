@@ -183,10 +183,64 @@
   to { transform: translateX(-50%); }
 }
 .certificate-track { animation: certificates-scroll 38s linear infinite; }
+.certificate-card { width: 300px; height: 286px; flex-shrink: 0; perspective: 1000px; }
+.certificate-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 600ms ease; }
+.certificate-card:hover .certificate-inner,
+.certificate-card[data-flipped="true"] .certificate-inner { transform: rotateY(180deg); }
+.certificate-face { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 20px; padding: 24px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); backface-visibility: hidden; }
+.certificate-back { transform: rotateY(180deg); background: var(--secondary); }
+
+/* Brand colors remain theme tokens rather than inline component styling. */
+:root {
+  --brand-typescript: oklch(0.54 0.14 250); --brand-javascript: oklch(0.83 0.16 95);
+  --brand-python: oklch(0.55 0.1 245); --brand-cpp: oklch(0.47 0.13 255);
+  --brand-react: oklch(0.72 0.12 220); --brand-tailwind: oklch(0.65 0.13 220);
+  --brand-motion: oklch(0.65 0.25 340); --brand-tanstack: oklch(0.65 0.2 35);
+  --brand-node: oklch(0.55 0.15 145); --brand-bun: oklch(0.72 0.06 75);
+  --brand-postgres: oklch(0.5 0.08 245); --brand-mongo: oklch(0.55 0.16 145);
+  --brand-redis: oklch(0.58 0.22 25); --brand-fastapi: oklch(0.55 0.1 180);
+  --brand-prisma: oklch(0.48 0.08 255); --brand-drizzle: oklch(0.67 0.18 125);
+  --brand-supabase: oklch(0.64 0.16 155); --brand-docker: oklch(0.6 0.16 245);
+  --brand-kubernetes: oklch(0.56 0.2 260); --brand-aws: oklch(0.7 0.17 65);
+  --brand-claude: oklch(0.63 0.11 45); --brand-langchain: oklch(0.46 0.08 165);
+  --brand-huggingface: oklch(0.8 0.16 85); --brand-groq: oklch(0.65 0.22 35);
+  --brand-n8n: oklch(0.63 0.21 10); --brand-posthog: oklch(0.62 0.2 35);
+  --brand-figma: oklch(0.63 0.22 25); --brand-paper: oklch(0.55 0.2 280);
+  --brand-photoshop: oklch(0.6 0.18 250);
+}
+.tech-brand { color: var(--foreground); }
+.tech-brand[data-brand="TypeScript"] { color: var(--brand-typescript); }
+.tech-brand[data-brand="JavaScript"] { color: var(--brand-javascript); }
+.tech-brand[data-brand="Python"] { color: var(--brand-python); }
+.tech-brand[data-brand="C++"] { color: var(--brand-cpp); }
+.tech-brand[data-brand="React"] { color: var(--brand-react); }
+.tech-brand[data-brand="Tailwind CSS"] { color: var(--brand-tailwind); }
+.tech-brand[data-brand="Motion"] { color: var(--brand-motion); }
+.tech-brand[data-brand="TanStack"] { color: var(--brand-tanstack); }
+.tech-brand[data-brand="Node.js"] { color: var(--brand-node); }
+.tech-brand[data-brand="Bun"] { color: var(--brand-bun); }
+.tech-brand[data-brand="SQL"], .tech-brand[data-brand="PostgreSQL"] { color: var(--brand-postgres); }
+.tech-brand[data-brand="MongoDB"] { color: var(--brand-mongo); }
+.tech-brand[data-brand="Redis"] { color: var(--brand-redis); }
+.tech-brand[data-brand="FastAPI"] { color: var(--brand-fastapi); }
+.tech-brand[data-brand="Prisma"] { color: var(--brand-prisma); }
+.tech-brand[data-brand="Drizzle ORM"] { color: var(--brand-drizzle); }
+.tech-brand[data-brand="Supabase"] { color: var(--brand-supabase); }
+.tech-brand[data-brand="Docker"] { color: var(--brand-docker); }
+.tech-brand[data-brand="Kubernetes"] { color: var(--brand-kubernetes); }
+.tech-brand[data-brand="AWS"] { color: var(--brand-aws); }
+.tech-brand[data-brand="Claude"] { color: var(--brand-claude); }
+.tech-brand[data-brand="LangChain"], .tech-brand[data-brand="LangGraph"] { color: var(--brand-langchain); }
+.tech-brand[data-brand="Hugging Face"] { color: var(--brand-huggingface); }
+.tech-brand[data-brand="n8n"] { color: var(--brand-n8n); }
+.tech-brand[data-brand="PostHog"] { color: var(--brand-posthog); }
+.tech-brand[data-brand="Figma"] { color: var(--brand-figma); }
+.tech-brand[data-brand="Photoshop"] { color: var(--brand-photoshop); }
 .certificate-marquee:hover .certificate-track,
 .certificate-marquee:focus-within .certificate-track { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) {
   .certificate-track { animation: none; }
+  .certificate-inner { transition: none; }
   .certificate-marquee { overflow-x: auto; }
   html { scroll-behavior: auto; }
 }

@@ -17,7 +17,7 @@ const logos: Record<string, IconType> = {
 
 export function TechLogo({ name }: { name: string }) {
   const asset = name === "Groq" ? groq : name === "Paper" ? paper : null;
-  if (asset) return <img src={asset.url} alt="" className="size-[22px] shrink-0 object-contain" />;
+  if (asset) return <img src={asset.url} alt="" data-brand={name} className="tech-brand size-[22px] shrink-0 object-contain" />;
   const Logo = logos[name];
-  return Logo ? <Logo aria-hidden="true" className="size-[22px] shrink-0 text-foreground" /> : null;
+  return Logo ? <Logo aria-hidden="true" data-brand={name} className="tech-brand size-[22px] shrink-0" /> : null;
 }
