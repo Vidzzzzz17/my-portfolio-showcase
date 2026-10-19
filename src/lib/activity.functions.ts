@@ -6,6 +6,7 @@ export type Activity = {
   leetcode: {
     ranking: number;
     solved: Record<string, number>;
+    questionCounts: Record<string, number>;
     activeDays: number;
     streak: number;
     submissions: number;
@@ -31,18 +32,33 @@ async function leetcode() {
     method: "POST",
     headers: { "Content-Type": "application/json", Referer: "https://leetcode.com" },
     body: JSON.stringify({
-      query: `{matchedUser(username:"${USER}"){profile{ranking} submitStatsGlobal{acSubmissionNum{difficulty count}} userCalendar{totalActiveDays streak submissionCalendar}}}`,
+      query: `{allQuestionsCount{difficulty count} matchedUser(username:"${USER}"){profile{ranking} submitStatsGlobal{acSubmissionNum{difficulty count}} userCalendar{totalActiveDays streak submissionCalendar}}}`,
     }),
   });
   if (!r.ok) throw new Error(`LeetCode ${r.status}`);
-  const u = (await r.json()).data.matchedUser;
+  if (!r.ok) throw new Error(`LeetCode ${r.status}`);
+  const payload = (await r.json()) as {
+    data?: {
+      allQuestionsCount?: { difficulty: string; count: number }[];
+      matchedUser?: {
+        profile: { ranking: number };
+        submitStatsGlobal: { acSubmissionNum: { difficulty: string; count: number }[] };
+        userCalendar: { totalActiveDays: number; streak: number; submissionCalendar: string };
+      } | null;
+    };
+    errors?: { message: string }[];
+  };
+  if (payload.errors?.length) throw new Error(payload.errors.map((error) => error.message).join("; "));
+  const u = payload.data?.matchedUser;
+  const allQuestionsCount = payload.data?.allQuestionsCount;
+  if (!u || !allQuestionsCount) throw new Error("LeetCode profile data is incomplete");
   const cal: Record<string, number> = JSON.parse(u.userCalendar.submissionCalendar);
   const byDate = new Map<string, number>();
   for (const [ts, c] of Object.entries(cal)) byDate.set(new Date(+ts * 1000).toISOString().slice(0, 10), c);
   const days: Day[] = [];
   const now = new Date();
+  now.setUTCHours(0, 0, 0, 0);
   const start = new Date(Date.UTC(now.getUTCFullYear() - 1, now.getUTCMonth(), now.getUTCDate()));
-  start.setUTCDate(start.getUTCDate() - start.getUTCDay());
   let submissions = 0;
   for (const d = start; d <= now; d.setUTCDate(d.getUTCDate() + 1)) {
     const k = d.toISOString().slice(0, 10);
@@ -55,6 +71,7 @@ async function leetcode() {
   return {
     ranking: u.profile.ranking,
     solved,
+    questionCounts: Object.fromEntries(allQuestionsCount.map((item) => [item.difficulty, item.count])),
     activeDays: u.userCalendar.totalActiveDays,
     streak: u.userCalendar.streak,
     submissions,
