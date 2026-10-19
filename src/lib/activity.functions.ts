@@ -36,7 +36,6 @@ async function leetcode() {
     }),
   });
   if (!r.ok) throw new Error(`LeetCode ${r.status}`);
-  if (!r.ok) throw new Error(`LeetCode ${r.status}`);
   const payload = (await r.json()) as {
     data?: {
       allQuestionsCount?: { difficulty: string; count: number }[];
