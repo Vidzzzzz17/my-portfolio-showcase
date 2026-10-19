@@ -1,3 +1,3 @@
 # Portfolio 
 
-This repo contains the Portfolio of Vidit 
+This repo contains the Portfolio of Vidit Sharma. 
