@@ -70,29 +70,51 @@ const heat = ["bg-heat-0", "bg-heat-1", "bg-heat-2", "bg-heat-3", "bg-heat-4"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 function Heatmap({ days }: { days: Day[] }) {
-  const weeks: Day[][] = [];
-  for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7));
-  let last = -1;
-  const labels = weeks.map((w) => {
-    const m = new Date(w[0]?.date ?? 0).getUTCMonth();
-    if (m === last) return "";
-    last = m;
-    return MONTHS[m];
+  const byDate = new Map(days.map((day) => [day.date, day]));
+  const first = days[0] ? new Date(`${days[0].date}T00:00:00Z`) : null;
+  const last = days.at(-1) ? new Date(`${days.at(-1)!.date}T00:00:00Z`) : null;
+  const weeks: (Day | null)[][] = [];
+
+  if (first && last) {
+    first.setUTCDate(first.getUTCDate() - first.getUTCDay());
+    for (const weekStart = new Date(first); weekStart <= last; weekStart.setUTCDate(weekStart.getUTCDate() + 7)) {
+      const week: (Day | null)[] = [];
+      for (let offset = 0; offset < 7; offset += 1) {
+        const date = new Date(weekStart);
+        date.setUTCDate(date.getUTCDate() + offset);
+        week.push(byDate.get(date.toISOString().slice(0, 10)) ?? null);
+      }
+      weeks.push(week);
+    }
+  }
+
+  let lastMonth = -1;
+  const labels = weeks.map((week) => {
+    const firstDay = week.find((day): day is Day => day !== null);
+    const month = firstDay ? new Date(`${firstDay.date}T00:00:00Z`).getUTCMonth() : -1;
+    if (month === -1 || month === lastMonth) return "";
+    lastMonth = month;
+    return MONTHS[month];
   });
+
   return (
     <div>
       <div className="overflow-x-auto pb-2">
         <div className="flex w-max gap-2">
           <div className="grid grid-rows-[16px_repeat(7,12px)] gap-[3px] pr-1 font-mono text-[11px] text-muted-foreground">
             <span />
-            {["", "Mon", "", "Wed", "", "Fri", ""].map((d, i) => <span key={i} className="leading-[12px]">{d}</span>)}
+            {["", "Mon", "", "Wed", "", "Fri", ""].map((day, i) => <span key={i} className="leading-[12px]">{day}</span>)}
           </div>
           <div className="flex gap-[3px]">
-            {weeks.map((w, i) => (
+            {weeks.map((week, i) => (
               <div key={i} className="grid grid-rows-[16px_repeat(7,12px)] gap-[3px]">
                 <span className="w-[12px] overflow-visible whitespace-nowrap font-mono text-[11px] text-muted-foreground">{labels[i]}</span>
-                {w.map((d) => (
-                  <div key={d.date} title={`${d.count} on ${d.date}`} className={`size-[12px] rounded-[2px] ${heat[Math.min(4, d.level)]}`} />
+                {week.map((day, dayIndex) => (
+                  day ? (
+                    <div key={day.date} title={`${day.count} contributions on ${day.date}`} aria-label={`${day.count} contributions on ${day.date}`} className={`size-[12px] rounded-[2px] ${heat[Math.min(4, day.level)]}`} />
+                  ) : (
+                    <span key={`empty-${dayIndex}`} aria-hidden="true" className="size-[12px]" />
+                  )
                 ))}
               </div>
             ))}
@@ -100,33 +122,32 @@ function Heatmap({ days }: { days: Day[] }) {
         </div>
       </div>
       <div className="mt-3 flex items-center justify-end gap-1.5 font-mono text-[12px] text-muted-foreground">
-        Less {heat.map((h) => <span key={h} className={`size-[12px] rounded-[2px] ${h}`} />)} More
+        Less {heat.map((color) => <span key={color} className={`size-[12px] rounded-[2px] ${color}`} />)} More
       </div>
     </div>
   );
 }
-
-function Ring({ easy, med, hard, solved, total }: { easy: number; med: number; hard: number; solved: number; total: number }) {
+function Ring({ easy, med, hard, solved, total, easyTotal, medTotal, hardTotal }: { easy: number; med: number; hard: number; solved: number; total: number; easyTotal: number; medTotal: number; hardTotal: number }) {
   const r = 62, c = 2 * Math.PI * r, span = 0.75, gap = 0.025;
   const parts = [
-    { v: easy, t: 971, cls: "stroke-easy" },
-    { v: med, t: 2128, cls: "stroke-medium" },
-    { v: hard, t: 983, cls: "stroke-hard" },
-  ];
-  const sum = parts.reduce((a, p) => a + p.t, 0);
+    { v: easy, t: easyTotal, cls: "stroke-easy" },
+    { v: med, t: medTotal, cls: "stroke-medium" },
+    { v: hard, t: hardTotal, cls: "stroke-hard" },
+  ].filter((part) => part.t > 0);
+  const sum = parts.reduce((acc, part) => acc + part.t, 0);
   let offset = 0;
   return (
     <div className="relative size-40">
       <svg viewBox="0 0 160 160" className="size-full rotate-[135deg]">
-        {parts.map((p) => {
-          const len = (p.t / sum) * (span - gap * 2) * c;
-          const prog = Math.max(len * (p.v / p.t), 4);
-          const start = offset;
+        {parts.map((part) => {
+          const len = (part.t / sum) * (span - gap * 2) * c;
+          const prog = part.v > 0 ? Math.max(len * Math.min(1, part.v / part.t), 4) : 0;
+          const currentOffset = offset;
           offset += len + gap * c;
           return (
-            <g key={p.cls} className={p.cls} fill="none" strokeLinecap="round" strokeWidth={5}>
-              <circle cx={80} cy={80} r={r} strokeOpacity={0.25} strokeDasharray={`${len} ${c}`} strokeDashoffset={-start} />
-              <circle cx={80} cy={80} r={r} strokeDasharray={`${prog} ${c}`} strokeDashoffset={-start} />
+            <g key={part.cls} className={part.cls} fill="none" strokeLinecap="round" strokeWidth={5}>
+              <circle cx={80} cy={80} r={r} strokeOpacity={0.25} strokeDasharray={`${len} ${c}`} strokeDashoffset={-currentOffset} />
+              <circle cx={80} cy={80} r={r} strokeDasharray={`${prog} ${c}`} strokeDashoffset={-currentOffset} />
             </g>
           );
         })}
@@ -138,7 +159,6 @@ function Ring({ easy, med, hard, solved, total }: { easy: number; med: number; h
     </div>
   );
 }
-
 function Section({ id, title, children }: { id?: string; title: string; children: ReactNode }) {
   return (
     <section id={id} className="scroll-mt-20 border-t border-border">
@@ -220,6 +240,7 @@ function PortfolioContent({ page, sent, setSent }: { page: PortfolioPage; sent: 
   const gh = data.github;
   const lc = data.leetcode;
   const solved: Record<string, number> = lc?.solved ?? {};
+  const questionCounts: Record<string, number> = lc?.questionCounts ?? {};
 
   return (
     <div id="top" className="min-h-screen overflow-x-hidden bg-background">
@@ -230,6 +251,7 @@ function PortfolioContent({ page, sent, setSent }: { page: PortfolioPage; sent: 
             {nav.map(({label, to}) => (
               <Link key={to} to={to} activeOptions={{exact: true}} activeProps={{className: "text-foreground"}} className="transition-colors hover:text-foreground">{label}</Link>
             ))}
+            <a href="/kernel-constitution.html" className="transition-colors hover:text-foreground">Kernel’s Constitution</a>
             <SearchPalette />
           </nav>
         </div>
@@ -316,9 +338,9 @@ function PortfolioContent({ page, sent, setSent }: { page: PortfolioPage; sent: 
             </div>
             <div className="grid gap-5 md:grid-cols-2">
               <div className="flex items-center justify-around gap-6 rounded-xl border border-border bg-card p-8">
-                <Ring easy={(solved["Easy"] ?? 0)} med={(solved["Medium"] ?? 0)} hard={(solved["Hard"] ?? 0)} solved={(solved["All"] ?? 0)} total={4082} />
+                <Ring easy={solved["Easy"] ?? 0} med={solved["Medium"] ?? 0} hard={solved["Hard"] ?? 0} solved={solved["All"] ?? 0} total={questionCounts["All"] ?? 0} easyTotal={questionCounts["Easy"] ?? 0} medTotal={questionCounts["Medium"] ?? 0} hardTotal={questionCounts["Hard"] ?? 0} />
                 <div className="space-y-2">
-                  {[["Easy", solved["Easy"], 971, "text-easy"], ["Med.", solved["Medium"], 2128, "text-medium"], ["Hard", solved["Hard"], 983, "text-hard"]].map(([l, a, b, c]) => (
+                  {[["Easy", solved["Easy"] ?? 0, questionCounts["Easy"] ?? 0, "text-easy"], ["Med.", solved["Medium"] ?? 0, questionCounts["Medium"] ?? 0, "text-medium"], ["Hard", solved["Hard"] ?? 0, questionCounts["Hard"] ?? 0, "text-hard"]].map(([l, a, b, c]) => (
                     <div key={l as string} className="w-28 rounded-lg bg-secondary py-2 text-center">
                       <p className={`font-mono text-sm ${c}`}>{l}</p>
                       <p className="text-lg">{a}/{b}</p>
