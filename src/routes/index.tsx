@@ -459,6 +459,7 @@ function Index() {
 
 function MusicPlayer() {
   return (
+    <div>
     <iframe
       title="Vidit Sharma’s Spotify playlist"
       src="https://open.spotify.com/embed/playlist/6tq0RyOMHa4GWQd1rDpn4p?utm_source=generator"
@@ -469,5 +470,7 @@ function MusicPlayer() {
       allowFullScreen
       loading="lazy"
     />
+    <Ext href="https://open.spotify.com/playlist/6tq0RyOMHa4GWQd1rDpn4p" className="mt-3 inline-flex font-mono text-sm text-muted-foreground hover:text-foreground">Open playlist on Spotify ↗</Ext>
+    </div>
   );
 }
