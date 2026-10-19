@@ -1,6 +1,8 @@
 import type { IconType } from "react-icons";
 import { SiTypescript, SiJavascript, SiPython, SiCplusplus, SiReact, SiNextdotjs, SiTailwindcss, SiShadcnui, SiRadixui, SiExpo, SiTanstack, SiNodedotjs, SiBun, SiPostgresql, SiMongodb, SiRedis, SiFastapi, SiFlask, SiPrisma, SiDrizzle, SiSupabase, SiDocker, SiKubernetes, SiClaude, SiCursor, SiLangchain, SiLanggraph, SiHuggingface, SiN8N, SiPosthog, SiFigma } from "react-icons/si";
 import { TbBrandAws, TbBrandAdobePhotoshop, TbBrandFramerMotion } from "react-icons/tb";
+import groq from "@/assets/groq.svg.asset.json";
+import paper from "@/assets/paper.svg.asset.json";
 
 const logos: Record<string, IconType> = {
   TypeScript: SiTypescript, JavaScript: SiJavascript, Python: SiPython, "C++": SiCplusplus,
@@ -14,6 +16,8 @@ const logos: Record<string, IconType> = {
 };
 
 export function TechLogo({ name }: { name: string }) {
+  const asset = name === "Groq" ? groq : name === "Paper" ? paper : null;
+  if (asset) return <img src={asset.url} alt="" className="size-[22px] shrink-0 object-contain" />;
   const Logo = logos[name];
   return Logo ? <Logo aria-hidden="true" className="size-[22px] shrink-0 text-foreground" /> : null;
 }
