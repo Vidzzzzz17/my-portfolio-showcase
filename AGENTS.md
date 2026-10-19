@@ -13,3 +13,5 @@
 - Use the official Spotify iframe for music; playback, account requirements, and previews remain controlled by Spotify.
 - Only show verified Medium article links; do not present invented article titles as published work.
 - Use bundled SVG icon components or imported brand assets for stack marks; non-brand concepts remain text-only rather than receiving invented logos.
+- Portfolio leaf routes render a shared browser-safe portfolio view and navigation, with route-specific metadata and shared activity query caching; this keeps pages consistent without duplicating sections.
+- Keep certificate flip interactions in a reusable component and brand color roles in global tokens so motion and color remain centrally controlled.

@@ -1,4 +1,9 @@
 # Portfolio updates
+- [ ] Add colorful technology marks and certificate flip interactions.
+- [ ] Add separate portfolio pages with working navigation.
+- [ ] Find and display verified Medium writing and X posts.
+- [ ] Check Spotify full-song availability and retain official playback.
+- [ ] Verify navigation, certificate interactions, and page rendering.
 - [x] Verify real GitHub contributions (332 live contributions).
 - [x] Replace synthesized music with requested Spotify iframe and direct link.
 - [x] Add Skiper motion and looping certificates, pausing on hover.
