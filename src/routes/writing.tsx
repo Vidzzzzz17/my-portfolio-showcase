@@ -4,9 +4,9 @@ import { PortfolioView, PortfolioError, activityQuery } from "@/components/portf
 export const Route = createFileRoute("/writing")({
   head: () => ({ meta: [
     { title: "Vidit Sharma — Writing" },
-    { name: "description", content: "Read Vidit Sharma’s writing on Medium and updates on X." },
+    { name: "description", content: "Read Vidit Sharma’s writing and essays on Medium." },
     { property: "og:title", content: "Vidit Sharma — Writing" },
-    { property: "og:description", content: "Read Vidit Sharma’s writing on Medium and updates on X." },
+    { property: "og:description", content: "Read Vidit Sharma’s writing and essays on Medium." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
   ] }),
