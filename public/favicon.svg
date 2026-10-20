@@ -1,17 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Vidit Sharma favicon">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Vidit Sharma V mark">
   <defs>
-    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
-      <stop offset="0%" stop-color="#0f172a"/>
-      <stop offset="100%" stop-color="#111827"/>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e7dece"/>
+      <stop offset="1" stop-color="#eee7da"/>
     </linearGradient>
-    <linearGradient id="v" x1="0" x2="1" y1="0" y2="1">
-      <stop offset="0%" stop-color="#f8fafc"/>
-      <stop offset="55%" stop-color="#e2e8f0"/>
-      <stop offset="100%" stop-color="#fbbf24"/>
+    <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d2b26"/>
+      <stop offset="1" stop-color="#173a34"/>
     </linearGradient>
   </defs>
-
-  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
-  <path d="M18 13 L28 47 L36 47 L46 13 H52 L37 54 H27 L12 13 H18 Z" fill="url(#v)"/>
-  <path d="M20 13 L32 43 L44 13" fill="none" stroke="#f8fafc" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+  <rect width="256" height="256" fill="url(#paper)"/>
+  <path d="M62 55h46l27 69 10 25 32-82-14-12h37v5h-7l-57 140h-9L70 60h-8z" fill="url(#ink)"/>
 </svg>
