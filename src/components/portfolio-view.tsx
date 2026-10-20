@@ -34,9 +34,9 @@ const projects = [
 ];
 const stack: [string, string[]][] = [
   ["01 Languages", ["TypeScript", "JavaScript", "Python", "C++", "SQL"]],
-  ["02 Frontend", ["React", "Next.js", "Tailwind CSS", "shadcn/ui", "Radix UI", "Motion", "Expo", "TanStack"]],
-  ["03 Backend & Database", ["Node.js", "Bun", "PostgreSQL", "MongoDB", "Redis", "FastAPI", "Flask", "Prisma", "Drizzle ORM", "Supabase", "Docker", "Kubernetes", "AWS"]],
-  ["04 Workflow & AI", ["ChatGPT", "Codex", "Claude", "Cursor", "LangChain", "LangGraph", "RAG", "Pinecone", "Hugging Face", "Groq", "n8n"]],
+  ["02 Frontend", ["React", "Next.js", "Tailwind CSS", "shadcn/ui", "Radix UI", "Base UI", "Motion", "Expo", "TanStack", "MobX-State-Tree"]],
+  ["03 Backend & Database", ["Node.js", "Bun", "PostgreSQL", "MongoDB", "Redis", "nginx", "Express.js", "FastAPI", "Flask", "MySQL", "Prisma", "Drizzle ORM", "Supabase", "Firebase", "REST APIs", "JWT", "Docker", "Kubernetes", "Vercel", "AWS"]],
+  ["04 Workflow & AI", ["Claude", "Cursor", "Gemini", "ChatGPT", "AI SDK", "LangChain", "LangGraph", "RAG", "Pinecone", "Qdrant", "Scikit-Learn", "Pydantic", "Hugging Face", "Vector Embeddings", "Groq", "n8n", "LLMs"]],
   ["05 Analytics · 06 Design", ["OpenPanel", "PostHog", "Figma", "Paper", "Photoshop"]],
 ];
 const certs = [
@@ -45,6 +45,12 @@ const certs = [
   ["AI Fluency for students", "Anthropic"],
   ["AI Foundations", "OpenAI Academy · Aug 8, 2026"],
   ["Introduction to Claude Cowork", "Anthropic"],
+];
+// Verified via the owner's live Medium RSS feed.
+const articles = [
+  { t: "Kernel’s Constitution", d: "Oct 18, 2026", u: "https://medium.com/@vidit1727/kernels-constitution-763d7d8fac5a" },
+  { t: "What would an Ideal Democracy look like?", d: "Oct 10, 2026", u: "https://medium.com/@vidit1727/what-would-an-ideal-democracy-look-like-f56426cb6837" },
+  { t: "You Don’t Need to Learn Every New Tech Trend (Here’s What to Do Instead)", d: "Oct 4, 2026", u: "https://medium.com/@vidit1727/you-dont-need-to-learn-every-new-tech-trend-here-s-what-to-do-instead-a09e4bb2798d" },
 ];
 const S = {
   github: "https://github.com/Vidzzzzz17",
@@ -251,7 +257,6 @@ function PortfolioContent({ page, sent, setSent }: { page: PortfolioPage; sent: 
             {nav.map(({label, to}) => (
               <Link key={to} to={to} activeOptions={{exact: true}} activeProps={{className: "text-foreground"}} className="transition-colors hover:text-foreground">{label}</Link>
             ))}
-            <a href="/kernel-constitution.html" className="transition-colors hover:text-foreground">Kernel’s Constitution</a>
             <SearchPalette />
           </nav>
         </div>
@@ -373,11 +378,29 @@ function PortfolioContent({ page, sent, setSent }: { page: PortfolioPage; sent: 
 
       }
       {(home || page === "writing") && <Section id="writing" title="Writing">
-        <p className="px-8 pt-8 pb-4 text-lg text-muted-foreground">Notes from building products, learning the craft, and following ideas a little further.</p>
-        <div className="px-8 pb-8">
-          <Ext href={S.medium} className="group flex items-center justify-between gap-4 border-y border-border py-6 transition-colors hover:text-accent">
-            <span className="flex items-center gap-4"><SiMedium className="size-8" /><span className="text-xl font-medium"><TextRoll>Writing on Medium</TextRoll></span></span>
-            <span className="font-mono">@vidit1727 ↗</span>
+        <div className="writing-intro px-8 pt-8 md:px-10 md:pt-10">
+          <div>
+            <p className="label-mono mb-3 text-accent">Field notes · 2026</p>
+            <h3 className="max-w-2xl text-balance text-3xl font-medium tracking-[-0.04em] md:text-5xl">Ideas worth taking a little further.</h3>
+          </div>
+          <p className="max-w-sm text-base leading-7 text-muted-foreground md:pt-6">Notes from building products, learning the craft, and following ideas a little further.</p>
+        </div>
+        <div className="px-8 pb-10 md:px-10 md:pb-12">
+          <div className="mt-10 border-t border-border">
+            {articles.map((a) => (
+              <Ext key={a.u} href={a.u} className="group grid gap-3 border-b border-border py-6 transition-colors hover:text-accent md:grid-cols-[1fr_auto] md:items-center">
+                <span className="text-xl font-medium tracking-[-0.02em] md:text-2xl">{a.t}</span>
+                <span className="font-mono text-sm text-muted-foreground group-hover:text-accent">{a.d} · Read ↗</span>
+              </Ext>
+            ))}
+          </div>
+          <Ext href={S.medium} className="writing-medium group mt-8 grid gap-6 rounded-2xl border border-border/80 bg-card/60 p-6 transition-all hover:-translate-y-1 hover:border-accent/50 hover:bg-card md:grid-cols-[1fr_auto] md:items-end md:p-8">
+            <span>
+              <span className="mb-8 flex size-11 items-center justify-center rounded-full bg-[#00ab6c]/12"><SiMedium className="size-6 text-[#00ab6c]" /></span>
+              <span className="block text-2xl font-medium tracking-[-0.03em] md:text-3xl"><TextRoll>All writing on Medium</TextRoll></span>
+              <span className="mt-2 block max-w-md text-sm leading-6 text-muted-foreground">Read every essay, experiment, and observation from @vidit1727.</span>
+            </span>
+            <span className="writing-arrow flex size-11 items-center justify-center rounded-full border border-border font-mono text-lg transition-colors group-hover:border-accent group-hover:bg-accent group-hover:text-accent-foreground">↗</span>
           </Ext>
         </div>
       </Section>
@@ -505,7 +528,7 @@ function MusicPlayer() {
       allowFullScreen
       loading="lazy"
     />
-    <Ext href="https://open.spotify.com/playlist/6tq0RyOMHa4GWQd1rDpn4p" className="mt-3 inline-flex font-mono text-sm text-muted-foreground hover:text-foreground">Open playlist on Spotify ↗</Ext>
+    <Ext href="https://open.spotify.com/playlist/6tq0RyOMHa4GWQd1rDpn4p" className="mt-3 inline-flex font-mono text-sm text-muted-foreground hover:text-foreground">Open Spotify for full-song playback ↗</Ext>
     </div>
   );
 }

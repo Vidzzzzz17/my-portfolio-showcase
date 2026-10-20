@@ -238,9 +238,20 @@
 .tech-brand[data-brand="Photoshop"] { color: var(--brand-photoshop); }
 .certificate-marquee:hover .certificate-track,
 .certificate-marquee:focus-within .certificate-track { animation-play-state: paused; }
+.writing-intro { display: grid; gap: 1.5rem; border-bottom: 1px solid var(--border); background: radial-gradient(circle at 80% 0%, var(--accent), transparent 34%); }
+.writing-arrow { transform: rotate(0); transition: transform 300ms ease; }
+.writing-medium:hover .writing-arrow { transform: rotate(12deg); }
+@supports (color: color-mix(in oklab, red, red)) {
+  .writing-intro { background: radial-gradient(circle at 80% 0%, color-mix(in oklab, var(--accent) 12%, transparent), transparent 34%); }
+  .writing-medium { box-shadow: 0 18px 50px color-mix(in oklab, var(--background) 75%, transparent); }
+}
+@media (min-width: 768px) {
+  .writing-intro { grid-template-columns: minmax(0, 1fr) minmax(220px, 0.42fr); }
+}
 @media (prefers-reduced-motion: reduce) {
   .certificate-track { animation: none; }
   .certificate-inner { transition: none; }
   .certificate-marquee { overflow-x: auto; }
+  .writing-medium, .writing-arrow { transition: none; }
   html { scroll-behavior: auto; }
 }
