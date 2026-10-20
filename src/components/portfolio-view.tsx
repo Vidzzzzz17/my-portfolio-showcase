@@ -13,7 +13,6 @@ import { TechLogo } from "@/components/tech-logo";
 import { CertificateCard } from "@/components/certificate-card";
 import { Button } from "@/components/ui/button";
 import { getActivity, type Day } from "@/lib/activity.functions";
-import logo from "@/assets/logo.png.asset.json";
 const avatar = { url: "/profile-portrait.webp" };
 const banner = { url: "/stay-curious-banner.webp" };
 import b1 from "@/assets/b1.png.asset.json";
@@ -252,7 +251,7 @@ function PortfolioContent({ page, sent, setSent }: { page: PortfolioPage; sent: 
     <div id="top" className="min-h-screen overflow-x-hidden bg-background">
       <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur">
         <div className="rail flex min-h-[83px] flex-wrap items-center justify-between gap-3 px-5 py-3">
-          <Link to="/" aria-label="Home"><img src={logo.url} alt="Vidit Sharma logo" className="size-12 rounded-lg" /></Link>
+          <Link to="/" aria-label="Home"><img src={"/favicon.png?v=2"} alt="Vidit Sharma logo" className="size-12 rounded-lg" /></Link>
           <nav aria-label="Main navigation" className="flex flex-wrap items-center gap-x-5 gap-y-3 text-sm text-muted-foreground">
             {nav.map(({label, to}) => (
               <Link key={to} to={to} activeOptions={{exact: true}} activeProps={{className: "text-foreground"}} className="transition-colors hover:text-foreground">{label}</Link>
@@ -478,7 +477,7 @@ function PortfolioContent({ page, sent, setSent }: { page: PortfolioPage; sent: 
         <div className="rail">
           <div className="grid gap-10 px-8 py-12 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
             <div>
-              <img src={logo.url} alt="" className="size-14 rounded-lg" />
+              <img src={"/favicon.png?v=2"} alt="" className="size-14 rounded-lg" />
               <p className="mt-4 text-2xl font-medium">Vidit Sharma</p>
               <p className="mt-3 max-w-sm text-lg leading-relaxed text-muted-foreground">Student &amp; founder in India. I build thoughtful digital products that make complicated ideas feel clear and useful.</p>
               <div className="mt-6"><SocialIcons wrap /></div>
